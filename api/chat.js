@@ -1,33 +1,23 @@
+import { GoogleGenAI } from '@google/genai';
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
   const { message } = req.body;
 
   try {
-    const response = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-goog-api-key": process.env.GEMINI_API_KEY
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                { text: message }
-              ]
-            }
-          ]
-        }),
-      }
-    );
+    const ai = new GoogleGenAI({
+      apiKey: process.env.GEMINI_API_KEY,
+    });
 
-    const data = await response.json();
+    const response = await ai.generateText({
+      model: 'gemini-2.5-flash-lite',
+      messages: [
+        { role: 'user', content: message }
+      ],
+    });
 
-    // Extract reply text
-    const reply = data?.candidates?.[0]?.content?.[0]?.text || "No response.";
+    const reply = response?.candidates?.[0]?.content?.[0]?.text || "No response.";
 
     res.status(200).json({ reply });
   } catch (err) {
